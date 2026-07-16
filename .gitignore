@@ -1,0 +1,29 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Maven
+target/
+
+# Archivos compilados
+*.class
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.tmp
+*.swp
+
+# Base de datos H2 local, si apareciera
+*.mv.db
+*.trace.db
+
+# Variables o archivos sensibles
+.env
+application-local.properties

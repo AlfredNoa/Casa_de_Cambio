@@ -1,0 +1,73 @@
+@startuml Patron_Factory_Method_Transaccion
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+skinparam interfaceBackgroundColor #E9ECEF
+
+title Patrón Factory Method — Creación de Transacciones\n<size:11>Casa de Cambio UTP</size>
+
+interface TransaccionCreator <<interface>> {
+    + crearTransaccion() : Transaccion
+}
+
+class CompraTransaccionCreator {
+    + crearTransaccion() : Transaccion
+}
+
+class VentaTransaccionCreator {
+    + crearTransaccion() : Transaccion
+}
+
+class TransferenciaTransaccionCreator {
+    + crearTransaccion() : Transaccion
+}
+
+class TransaccionFactory {
+    - TransaccionFactory()
+    + {static} crear(TipoOperacion) : Transaccion
+}
+
+class Transaccion {
+    - id : Long
+    - tipo : TipoOperacion
+    - estado : EstadoTransaccion
+    - cliente : Cliente
+    - parMoneda : ParMoneda
+    - montoEntregado : BigDecimal
+    - detalle : DetalleTransaccion
+    --
+    + confirmar() : void
+    + anular() : void
+}
+
+enum TipoOperacion {
+    COMPRA
+    VENTA
+    TRANSFERENCIA
+}
+
+note right of TransaccionFactory
+  <b>Patrón Factory Method</b>
+  • TransaccionFactory selecciona el creator
+    adecuado según el TipoOperacion
+  • El cliente (TransaccionServiceImpl) no conoce
+    los creators concretos: solo llama crear()
+  • Agregar un nuevo tipo de transacción solo
+    requiere un nuevo ConcreteCreator (OCP)
+end note
+
+TransaccionCreator <|.. CompraTransaccionCreator
+TransaccionCreator <|.. VentaTransaccionCreator
+TransaccionCreator <|.. TransferenciaTransaccionCreator
+
+TransaccionFactory ..> TransaccionCreator : «creates»
+TransaccionFactory ..> TipoOperacion : «uses»
+TransaccionCreator ..> Transaccion : «creates»
+
+@enduml

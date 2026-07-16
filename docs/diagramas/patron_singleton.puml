@@ -1,0 +1,64 @@
+@startuml Patron_Singleton_GestorTipoCambio
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+
+title Patrón Singleton — GestorTipoCambio\n<size:11>Casa de Cambio UTP</size>
+
+class GestorTipoCambio {
+    - {static} instancia : GestorTipoCambio
+    - tiposCambioVigentes : Map<String, TipoCambio>
+    --
+    - GestorTipoCambio()
+    + {static} getInstancia() : GestorTipoCambio
+    + actualizarTipoCambio(TipoCambio) : void
+    + obtenerTipoCambio(ParMoneda) : TipoCambio
+    + existeTipoCambio(ParMoneda) : boolean
+    + limpiarTiposCambio() : void
+}
+
+class TipoCambio {
+    - id : Long
+    - parMoneda : ParMoneda
+    - precioCompra : BigDecimal
+    - precioVenta : BigDecimal
+    - fechaHora : LocalDateTime
+    --
+    + esVigente() : boolean
+    + getPar() : String
+}
+
+class ParMoneda {
+    - id : Long
+    - monedaOrigen : Moneda
+    - monedaDestino : Moneda
+    - activo : boolean
+    --
+    + getPar() : String
+}
+
+class TransaccionServiceImpl {
+    + crear(TipoOperacion, Cliente, ParMoneda, BigDecimal) : Transaccion
+}
+
+note right of GestorTipoCambio
+  <b>Patrón Singleton</b>
+  • Constructor privado impide instanciación directa
+  • getInstancia() es el único punto de acceso
+  • Lazy initialization con synchronized para
+    thread-safety en entorno Spring Boot
+  • Garantiza un único gestor de tipos de cambio
+    vigentes en todo el ciclo de vida de la app
+end note
+
+GestorTipoCambio "1" o-- "0..*" TipoCambio : tiposCambioVigentes >
+TipoCambio "1" --> "1" ParMoneda : parMoneda >
+TransaccionServiceImpl ..> GestorTipoCambio : «uses»\ngetInstancia()
+
+@enduml

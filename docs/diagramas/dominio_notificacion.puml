@@ -1,0 +1,88 @@
+@startuml Dominio_Notificacion
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+
+title Dominio — Paquete notificacion\n<size:11>Casa de Cambio UTP</size>
+
+class EventoSistema {
+    - id : Long
+    - nombre : String
+    - descripcion : String
+    - fechaHora : LocalDateTime
+    - origenClase : String
+    --
+    + publicar() : void
+}
+
+class Notificacion {
+    - id : Long
+    - mensaje : String
+    - tipo : TipoNotificacion
+    - canal : CanalNotificacion
+    - fechaHora : LocalDateTime
+    - leida : boolean
+    --
+    + enviar() : void
+}
+
+class RegistroAuditoria {
+    - id : Long
+    - usuario : Usuario
+    - accion : String
+    - entidadAfectada : String
+    - idEntidadAfectada : Long
+    - fechaHora : LocalDateTime
+    - detalles : String
+    --
+    + guardar() : void
+}
+
+class ConfiguracionSistema {
+    - id : Long
+    - nombreEmpresa : String
+    - monedaBase : String
+    - horaApertura : int
+    - horaCierre : int
+    - notificacionesActivas : boolean
+    --
+    + enHorarioAtencion() : boolean
+}
+
+enum TipoNotificacion {
+    ALERTA
+    INFORMATIVA
+    ERROR
+}
+
+enum CanalNotificacion {
+    PANTALLA
+    EMAIL
+    LOG
+}
+
+Notificacion "1" --> "1" TipoNotificacion : tipo
+Notificacion "1" --> "1" CanalNotificacion : canal
+RegistroAuditoria "0..*" --> "0..1" Usuario : realizado por
+
+note right of EventoSistema
+  Sujeto (Subject) del patron Observer.
+  NotificacionObserver y AuditoriaObserver
+  reaccionan generando Notificacion y
+  RegistroAuditoria respectivamente.
+  Ver diagrama de patron Observer.
+end note
+
+note bottom of ConfiguracionSistema
+  enHorarioAtencion() sin service asociado
+  todavia; no forma parte de ningun flujo
+  de negocio conectado por ahora.
+end note
+
+@enduml

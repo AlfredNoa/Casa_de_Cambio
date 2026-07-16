@@ -1,0 +1,93 @@
+@startuml Dominio_Seguridad
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+
+title Dominio — Paquete seguridad\n<size:11>Casa de Cambio UTP</size>
+
+class Rol {
+    - id : Long
+    - nombre : String
+    - descripcion : String
+    - permisos : List<Permiso>
+    --
+    + listarPermisos() : List<Permiso>
+}
+
+class Permiso {
+    - id : Long
+    - nombre : String
+    - descripcion : String
+    - rol : Rol
+}
+
+class Sesion {
+    - id : Long
+    - usuario : Usuario
+    - horaInicio : LocalDateTime
+    - horaFin : LocalDateTime
+    - activa : boolean
+    --
+    + iniciar() : void
+    + cerrar() : void
+}
+
+class LogAcceso {
+    - id : Long
+    - usuario : Usuario
+    - fechaHora : LocalDateTime
+    - accion : String
+    - ipOrigen : String
+    - exitoso : boolean
+    --
+    + registrar() : void
+}
+
+class TokenSeguridad {
+    - id : Long
+    - valor : String
+    - usuario : Usuario
+    - fechaExpiracion : LocalDateTime
+    - vigente : boolean
+    --
+    + esValido() : boolean
+    + esValido(Clock) : boolean
+    + invalidar() : void
+}
+
+class PoliticaContrasena {
+    - id : Long
+    - longitudMinima : int
+    - requiereMayuscula : boolean
+    - requiereNumero : boolean
+    - requiereCaracterEspecial : boolean
+    - diasVigencia : int
+    --
+    + validar(String) : boolean
+}
+
+Rol "1" o-- "0..*" Permiso : agrega >
+Sesion "0..*" --> "1" Usuario : pertenece a
+LogAcceso "0..*" --> "1" Usuario : registra acceso de
+TokenSeguridad "0..*" --> "1" Usuario : autentica a
+
+note right of Sesion
+  Sesion, LogAcceso y TokenSeguridad
+  se coordinan a traves de SeguridadService,
+  que centraliza la logica de autenticacion
+  (fuera de este diagrama de dominio).
+end note
+
+note bottom of PoliticaContrasena
+  validar() evita regex vulnerable a ReDoS
+  (SonarQube S5852): valida caracter por
+  caracter en vez de ".*X.*".
+end note
+
+@enduml

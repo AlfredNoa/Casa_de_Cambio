@@ -1,0 +1,167 @@
+@startuml Arquitectura_General_CasaCambio
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #6C757D
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam packageBackgroundColor #F1F3F5
+skinparam packageBorderColor #ADB5BD
+skinparam arrowColor #495057
+skinparam shadowing false
+
+title Diagrama General de Clases — Sistema Casa de Cambio UTP\n<size:10>Arquitectura en capas: Controller → Service → Repository → Modelo</size>
+
+' ===== CAPA CONTROLLER =====
+package "controller" #E3F2FD {
+    class ClienteController {
+        + registrar(ClienteRequest) : ResponseEntity
+        + buscarPorId(Long) : ResponseEntity
+        + listarTodos() : ResponseEntity
+    }
+    class TransaccionController {
+        + crear(TransaccionRequest) : ResponseEntity
+        + confirmar(Long) : ResponseEntity
+        + anular(Long) : ResponseEntity
+        + listarTodas() : ResponseEntity
+    }
+}
+
+' ===== CAPA SERVICE =====
+package "service" #E8F5E9 {
+    interface ClienteService {
+        + registrar(Cliente) : Cliente
+        + buscarPorId(Long) : Optional<Cliente>
+        + listarTodos() : List<Cliente>
+    }
+    class ClienteServiceImpl {
+        + registrar(Cliente) : Cliente
+        + buscarPorId(Long) : Optional<Cliente>
+        + listarTodos() : List<Cliente>
+    }
+
+    interface TransaccionService {
+        + crear(...) : Transaccion
+        + confirmar(Long) : Transaccion
+        + anular(Long) : Transaccion
+    }
+    class TransaccionServiceImpl {
+        + crear(...) : Transaccion
+        + confirmar(Long) : Transaccion
+        + anular(Long) : Transaccion
+    }
+
+    interface SeguridadService {
+        + validarContrasena(...) : boolean
+        + iniciarSesion(Usuario) : Sesion
+        + verificarToken(TokenSeguridad) : boolean
+    }
+    class SeguridadServiceImpl {
+        + validarContrasena(...) : boolean
+        + iniciarSesion(Usuario) : Sesion
+        + verificarToken(TokenSeguridad) : boolean
+    }
+
+    ' Patrones
+    package "patron.singleton" #FFF9C4 {
+        class GestorTipoCambio <<Singleton>> {
+            + {static} getInstancia() : GestorTipoCambio
+            + actualizarTipoCambio(TipoCambio) : void
+            + obtenerTipoCambio(ParMoneda) : TipoCambio
+        }
+    }
+    package "patron.factory" #FFF9C4 {
+        class TransaccionFactory <<Factory>> {
+            + {static} crear(TipoOperacion) : Transaccion
+        }
+    }
+    package "patron.decorator" #FFF9C4 {
+        interface CalculadorPrecio <<Decorator>> {
+            + calcularPrecioVenta(...) : BigDecimal
+            + calcularPrecioCompra(...) : BigDecimal
+        }
+    }
+    package "patron.observer" #FFF9C4 {
+        class PublicadorEventos <<Subject>> {
+            + publicar(EventoSistema) : void
+        }
+        interface ObservadorEvento <<Observer>> {
+            + actualizar(EventoSistema) : void
+        }
+    }
+}
+
+' ===== CAPA REPOSITORY =====
+package "repository" #FBE9E7 {
+    interface ClienteRepository {
+        + guardar(Cliente) : Cliente
+        + buscarPorId(Long) : Optional<Cliente>
+        + buscarPorDni(String) : Optional<Cliente>
+        + listarTodos() : List<Cliente>
+    }
+    class ClienteRepositoryImpl {
+        + guardar(Cliente) : Cliente
+        + buscarPorId(Long) : Optional<Cliente>
+    }
+    interface TransaccionRepository {
+        + guardar(Transaccion) : Transaccion
+        + buscarPorId(Long) : Optional<Transaccion>
+        + listarTodas() : List<Transaccion>
+    }
+    class TransaccionRepositoryImpl {
+        + guardar(Transaccion) : Transaccion
+        + buscarPorId(Long) : Optional<Transaccion>
+    }
+}
+
+' ===== CAPA MODELO =====
+package "modelo" #F3E5F5 {
+    class Cliente {
+        - dni : String
+        - nombre : String
+        - tipoCliente : TipoCliente
+        --
+        + registrar() : void
+    }
+    class Transaccion {
+        - tipo : TipoOperacion
+        - estado : EstadoTransaccion
+        - montoEntregado : BigDecimal
+        --
+        + confirmar() : void
+        + anular() : void
+    }
+    class TipoCambio {
+        - precioCompra : BigDecimal
+        - precioVenta : BigDecimal
+        --
+        + esVigente() : boolean
+    }
+    class ParMoneda {
+        + getPar() : String
+    }
+}
+
+' ===== RELACIONES =====
+ClienteController --> ClienteService
+TransaccionController --> TransaccionService
+
+ClienteService <|.. ClienteServiceImpl
+TransaccionService <|.. TransaccionServiceImpl
+SeguridadService <|.. SeguridadServiceImpl
+
+ClienteServiceImpl --> ClienteRepository
+TransaccionServiceImpl --> TransaccionRepository
+TransaccionServiceImpl ..> GestorTipoCambio
+TransaccionServiceImpl ..> TransaccionFactory
+TransaccionServiceImpl ..> CalculadorPrecio
+TransaccionServiceImpl --> PublicadorEventos
+
+ClienteRepository <|.. ClienteRepositoryImpl
+TransaccionRepository <|.. TransaccionRepositoryImpl
+
+PublicadorEventos o--> ObservadorEvento
+
+ClienteRepositoryImpl ..> Cliente : persiste
+TransaccionRepositoryImpl ..> Transaccion : persiste
+
+@enduml

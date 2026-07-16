@@ -1,0 +1,84 @@
+@startuml Dominio_Cliente
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+
+title Dominio — Paquete cliente\n<size:11>Casa de Cambio UTP</size>
+
+class Cliente {
+    - id : Long
+    - nombre : String
+    - dni : String
+    - email : String
+    - telefono : String
+    - tipoCliente : TipoCliente
+    --
+    + registrar() : void
+}
+
+abstract class Operacion {
+    - id : Long
+    - fecha : LocalDate
+    - monto : BigDecimal
+    - tipoOperacion : TipoOperacion
+    --
+    + {abstract} calcularTotal() : BigDecimal
+    + {abstract} ejecutar() : void
+}
+
+class Moneda {
+    - id : Long
+    - codigo : String
+    - nombre : String
+    - simbolo : String
+    --
+    + getCodigo() : String
+}
+
+class ParMoneda {
+    - id : Long
+    - monedaOrigen : Moneda
+    - monedaDestino : Moneda
+    - activo : boolean
+    --
+    + getPar() : String
+}
+
+enum TipoCliente {
+    NATURAL
+    JURIDICO
+    VIP
+}
+
+enum TipoOperacion {
+    COMPRA
+    VENTA
+    TRANSFERENCIA
+}
+
+Cliente "1" --> "1" TipoCliente : tipoCliente
+Operacion "1" --> "1" TipoOperacion : tipoOperacion
+ParMoneda "1" o-- "2" Moneda : compone >
+ParMoneda "1" --> "1" TipoOperacion
+
+note right of Operacion
+  Clase abstracta base (herencia JOINED).
+  Las subclases concretas (Compra/Venta/
+  Transferencia) las crea el Factory Method
+  TransaccionFactory — ver diagrama de
+  patrones.
+end note
+
+note bottom of ParMoneda
+  Ejemplos validos: PEN/USD, PEN/EUR, USD/EUR.
+  Usado como clave por el Singleton
+  GestorTipoCambio (getPar()).
+end note
+
+@enduml

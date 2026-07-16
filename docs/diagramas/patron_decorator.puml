@@ -1,0 +1,85 @@
+@startuml Patron_Decorator_CalculadorPrecio
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+skinparam interfaceBackgroundColor #E9ECEF
+
+title Patrón Decorator — Cálculo de Precio de Divisas\n<size:11>Casa de Cambio UTP</size>
+
+interface CalculadorPrecio <<interface>> {
+    + calcularPrecioVenta(TipoCambio, Cliente) : BigDecimal
+    + calcularPrecioCompra(TipoCambio, Cliente) : BigDecimal
+}
+
+class CalculadorPrecioBase {
+    + calcularPrecioVenta(TipoCambio, Cliente) : BigDecimal
+    + calcularPrecioCompra(TipoCambio, Cliente) : BigDecimal
+}
+
+abstract class CalculadorPrecioDecorator {
+    # componente : CalculadorPrecio
+    --
+    + calcularPrecioVenta(TipoCambio, Cliente) : BigDecimal
+    + calcularPrecioCompra(TipoCambio, Cliente) : BigDecimal
+}
+
+class ComisionDecorator {
+    - {static} PORCENTAJE_COMISION : BigDecimal = 0.005
+    --
+    + calcularPrecioVenta(TipoCambio, Cliente) : BigDecimal
+    + calcularPrecioCompra(TipoCambio, Cliente) : BigDecimal
+}
+
+class DescuentoVipDecorator {
+    - {static} PORCENTAJE_DESCUENTO_VIP : BigDecimal = 0.003
+    --
+    + calcularPrecioVenta(TipoCambio, Cliente) : BigDecimal
+    + calcularPrecioCompra(TipoCambio, Cliente) : BigDecimal
+    - esVip(Cliente) : boolean
+}
+
+class ImpuestoDecorator {
+    - {static} PORCENTAJE_IMPUESTO : BigDecimal
+    --
+    + calcularPrecioVenta(TipoCambio, Cliente) : BigDecimal
+    + calcularPrecioCompra(TipoCambio, Cliente) : BigDecimal
+}
+
+class TransaccionServiceImpl {
+    - calcularDetalle(...) : DetalleTransaccion
+}
+
+note bottom of TransaccionServiceImpl
+  Construcción en cadena:
+  new ImpuestoDecorator(
+    new DescuentoVipDecorator(
+      new ComisionDecorator(
+        new CalculadorPrecioBase())))
+end note
+
+note right of CalculadorPrecioDecorator
+  <b>Patrón Decorator</b>
+  • CalculadorPrecioBase: retorna el precio
+    raw del TipoCambio sin modificar
+  • Cada decorator envuelve al anterior
+    y añade su ajuste (comisión, VIP, impuesto)
+  • Se pueden combinar en cualquier orden
+    sin modificar clases existentes (OCP)
+  • DescuentoVip solo actúa si cliente es VIP
+end note
+
+CalculadorPrecio <|.. CalculadorPrecioBase
+CalculadorPrecio <|.. CalculadorPrecioDecorator
+CalculadorPrecioDecorator <|-- ComisionDecorator
+CalculadorPrecioDecorator <|-- DescuentoVipDecorator
+CalculadorPrecioDecorator <|-- ImpuestoDecorator
+CalculadorPrecioDecorator o--> CalculadorPrecio : componente
+TransaccionServiceImpl ..> CalculadorPrecio : «uses»
+
+@enduml

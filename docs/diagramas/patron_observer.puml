@@ -1,0 +1,97 @@
+@startuml Patron_Observer_EventoSistema
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+skinparam interfaceBackgroundColor #E9ECEF
+
+title Patrón Observer — Notificación de Eventos del Sistema\n<size:11>Casa de Cambio UTP</size>
+
+class PublicadorEventos {
+    - observadores : List<ObservadorEvento>
+    --
+    + suscribir(ObservadorEvento) : void
+    + desuscribir(ObservadorEvento) : void
+    + publicar(EventoSistema) : void
+    + cantidadObservadores() : int
+}
+
+interface ObservadorEvento <<interface>> {
+    + actualizar(EventoSistema) : void
+}
+
+class NotificacionObserver {
+    + actualizar(EventoSistema) : void
+    - determinarTipo(EventoSistema) : TipoNotificacion
+}
+
+class AuditoriaObserver {
+    + actualizar(EventoSistema) : void
+}
+
+class EventoSistema {
+    - id : Long
+    - nombre : String
+    - descripcion : String
+    - origenClase : String
+    - fechaHora : LocalDateTime
+    --
+    + publicar() : void
+}
+
+class Notificacion {
+    - mensaje : String
+    - tipo : TipoNotificacion
+    - canal : CanalNotificacion
+    --
+    + enviar() : void
+}
+
+class RegistroAuditoria {
+    - accion : String
+    - entidadAfectada : String
+    - detalles : String
+    --
+    + guardar() : void
+}
+
+class TransaccionServiceImpl {
+    - publicadorEventos : PublicadorEventos
+    --
+    + confirmar(Long) : Transaccion
+    + anular(Long) : Transaccion
+}
+
+note right of PublicadorEventos
+  <b>Patrón Observer</b>
+  • PublicadorEventos = Subject
+  • ObservadorEvento = Observer
+  • Al confirmar/anular una transacción,
+    TransaccionServiceImpl publica un
+    EventoSistema al publicador
+  • Todos los observadores suscritos
+    son notificados automáticamente:
+    - NotificacionObserver → muestra pantalla
+    - AuditoriaObserver → guarda registro
+  • Agregar nuevo observador no cambia
+    el código del publicador (OCP)
+end note
+
+ObservadorEvento <|.. NotificacionObserver
+ObservadorEvento <|.. AuditoriaObserver
+
+PublicadorEventos "1" o--> "0..*" ObservadorEvento : observadores
+PublicadorEventos ..> EventoSistema : «publishes»
+
+NotificacionObserver ..> Notificacion : «creates»
+AuditoriaObserver ..> RegistroAuditoria : «creates»
+
+TransaccionServiceImpl --> PublicadorEventos : publicadorEventos
+TransaccionServiceImpl ..> EventoSistema : «creates»
+
+@enduml

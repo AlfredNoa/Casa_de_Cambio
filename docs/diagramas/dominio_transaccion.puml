@@ -1,0 +1,97 @@
+@startuml Dominio_Transaccion
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+
+title Dominio — Paquete transaccion\n<size:11>Casa de Cambio UTP</size>
+
+class Transaccion {
+    - id : Long
+    - cliente : Cliente
+    - parMoneda : ParMoneda
+    - tipo : TipoOperacion
+    - montoEntregado : BigDecimal
+    - estado : EstadoTransaccion
+    - detalle : DetalleTransaccion
+    --
+    + calcularRecibido() : BigDecimal
+    + confirmar() : void
+    + anular() : void
+}
+
+class DetalleTransaccion {
+    - id : Long
+    - tipoCambioAplicado : BigDecimal
+    - comision : BigDecimal
+    - montoFinal : BigDecimal
+    --
+    + calcular() : void
+}
+
+class Comprobante {
+    - id : Long
+    - numero : String
+    - fechaEmision : LocalDateTime
+    - transaccion : Transaccion
+    - subtotal : BigDecimal
+    --
+    + generar() : void
+}
+
+class Caja {
+    - id : Long
+    - saldoInicial : BigDecimal
+    - saldoActual : BigDecimal
+    - sucursal : Sucursal
+    - abierta : boolean
+    - movimientos : List<MovimientoCaja>
+    --
+    + abrir() : void
+    + cerrar() : void
+    + registrarMovimiento(MovimientoCaja) : void
+}
+
+class MovimientoCaja {
+    - id : Long
+    - tipo : String
+    - monto : BigDecimal
+    - fecha : LocalDateTime
+    - descripcion : String
+    - caja : Caja
+    --
+    + registrar() : void
+}
+
+enum EstadoTransaccion {
+    PENDIENTE
+    EN_PROCESO
+    COMPLETADA
+    ANULADA
+}
+
+Transaccion "1" *-- "1" DetalleTransaccion : compone >
+Transaccion "1" -- "1" Comprobante : respalda >
+Transaccion "1" --> "1" EstadoTransaccion : estado
+Caja "1" o-- "0..*" MovimientoCaja : agrega >
+Caja "1" --> "1" Sucursal : pertenece a
+
+note right of Transaccion
+  Creada por el Factory Method
+  TransaccionFactory. El precio final de
+  DetalleTransaccion lo calcula el Decorator
+  CalculadorPrecio. Ver diagramas de patrones.
+end note
+
+note bottom of Caja
+  Fuera de alcance para la entrega final:
+  sin CajaRepository/CajaService todavia,
+  no esta conectada al flujo de negocio.
+end note
+
+@enduml

@@ -1,0 +1,96 @@
+@startuml Dominio_TipoCambio
+skinparam backgroundColor white
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam classHeaderBackgroundColor #343A40
+skinparam classHeaderFontColor white
+skinparam arrowColor #495057
+skinparam noteFontColor #343A40
+skinparam noteBorderColor #ADB5BD
+skinparam shadowing false
+
+title Dominio — Paquete tipocambio\n<size:11>Casa de Cambio UTP</size>
+
+class TipoCambio {
+    - id : Long
+    - parMoneda : ParMoneda
+    - precioCompra : BigDecimal
+    - precioVenta : BigDecimal
+    - fechaHora : LocalDateTime
+    --
+    + getPrecioCompra() : BigDecimal
+    + getPrecioVenta() : BigDecimal
+    + esVigente() : boolean
+    + esVigente(Clock) : boolean
+}
+
+class HistorialTipoCambio {
+    - id : Long
+    - tipoCambio : TipoCambio
+    - fechaRegistro : LocalDateTime
+    - usuario : Usuario
+    --
+    + registrar() : void
+}
+
+class Reporte {
+    - id : Long
+    - tipo : String
+    - fechaGeneracion : LocalDateTime
+    - generadoPor : Usuario
+    - filtro : FiltroReporte
+    --
+    + generar() : void
+    + exportar() : void
+}
+
+class FiltroReporte {
+    - id : Long
+    - fechaInicio : LocalDate
+    - fechaFin : LocalDate
+    - sucursal : Sucursal
+    - tipoOperacion : TipoOperacion
+    --
+    + aplicar() : List<Object>
+}
+
+class Sucursal {
+    - id : Long
+    - nombre : String
+    - direccion : String
+    - activa : boolean
+    --
+    + listarCajas() : List<Object>
+}
+
+class Usuario {
+    - id : Long
+    - username : String
+    - password : String
+    - rol : String
+    - sucursal : Sucursal
+    --
+    + autenticar(String) : boolean
+}
+
+HistorialTipoCambio "0..*" --> "1" TipoCambio : audita >
+HistorialTipoCambio "0..*" --> "1" Usuario : registrado por
+Reporte "1" *-- "1" FiltroReporte : compone >
+Reporte "0..*" --> "1" Usuario : generado por
+FiltroReporte "0..*" --> "0..1" Sucursal
+Usuario "0..*" --> "1" Sucursal : pertenece a
+
+note right of TipoCambio
+  Gestionado en memoria por el Singleton
+  GestorTipoCambio (no persiste via JPA).
+  esVigente(Clock) permite pruebas
+  deterministicas. Ver diagrama Singleton.
+end note
+
+note bottom of Reporte
+  Patron a aplicar en entrega final: Builder
+  para la construccion paso a paso (indicado
+  en el codigo, pendiente de implementar).
+end note
+
+@enduml
