@@ -60,7 +60,7 @@ public class TipoCambioController {
 
     /**
      * Arma un ParMoneda liviano a partir de dos codigos de moneda. Se usa
-     * solo para consultar/indexar en el GestorTipoCambio (que guarda todo
+     * solo para consultar/indexar en el GestorTipoCambio (que guarda
      * en memoria por el String de getPar()), no para persistir en BD.
      */
     private ParMoneda construirParMoneda(String codigoOrigen, String codigoDestino) {
